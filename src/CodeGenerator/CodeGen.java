@@ -27,18 +27,15 @@ public class CodeGen extends LevelBaseListener {
     public int counter;
     public String Tupelwert;
     public static int numberBricks;
-    /*static String inpath = "D:\\Programmierprojekte\\Breakout V2.0\\src\\CodeGenerator\\csv\\level_1.csv"; // Pfad
-    static String outpath = "D:\\Programmierprojekte\\Breakout V2.0\\src\\CodeGenerator\\out\\PlayField.java"; // Pfad*/
 
-    //static String inpath ; // Pfad
     static String outpath ; // Pfad fuer die Ausgabe
     public String output;
     public static DateFormat dateFormat;
     public static Date date;
-    private ArrayList<String> codefragments;
-    private int csvFileCount;
+    private ArrayList<String> codefragments; // Liste für die einzelnen CodeFragments
+    private int csvFileCount; // Zaehlt wie viele CSV Files eingelesen wurden
 
-    public CodeGen(){
+    public CodeGen(){ // Konstruktur der beim erstellen des Objekts aufgerufen wird, beinhaltet den Header
         codefragments = new ArrayList<String>();
         csvFileCount = 0;
         counter = 0;
@@ -62,9 +59,9 @@ public class CodeGen extends LevelBaseListener {
     public static void main(String[] args) throws IOException {
 
         File directory = new File("src\\CodeGenerator\\csv\\");
-        File[] inputFiles = directory.listFiles((d, name) -> name.endsWith(".csv"));
+        File[] inputFiles = directory.listFiles((d, name) -> name.endsWith(".csv")); // Lambda, scannt Ordner nach CSV Files und legt sie in File-Liste ab
         LevelBaseListener listener = new CodeGen();
-        for(int i = 0; i < inputFiles.length;i++){
+        for(int i = 0; i < inputFiles.length;i++){ // For Schleife die den Parser, Lexer und Walker aufruft
             FileReader tmp = new FileReader(inputFiles[i]);
             LevelLexer lexer = new LevelLexer(new ANTLRInputStream(tmp));
             CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -82,7 +79,7 @@ public class CodeGen extends LevelBaseListener {
         FileWriter writer = new FileWriter(outpath);
         File outputFile =new File (outpath);
         if (!outputFile.exists())
-            outputFile.createNewFile();
+            outputFile.createNewFile(); // Schreibt Daten in Java File
 
         System.out.print("Anzahl der erzeugten Funktionen " + ((CodeGen)listener).getCount());
         writer.write(((CodeGen)listener).getOutput());
@@ -95,7 +92,7 @@ public class CodeGen extends LevelBaseListener {
         return csvFileCount;
     }
 
-    public String getOutput(){
+    public String getOutput(){ // Setzt alle einzelnen generierten CodeFragments zusammen
         String completeCode = "";
         for (String codefragment:codefragments) {
             completeCode+=codefragment;
@@ -104,7 +101,7 @@ public class CodeGen extends LevelBaseListener {
         completeCode+="}\n";
         return completeCode;
     }
-    private String generateManagementFunctions(){
+    private String generateManagementFunctions(){ // Erzeugt den letzten CodeBlock für das Java File
         String code = "\tpublic static int getPlayFieldCount() {\n" +
                 "\t\treturn "+csvFileCount+";\n" +
                 "\t}\n" +
@@ -120,7 +117,7 @@ public class CodeGen extends LevelBaseListener {
         return code;
     }
     @Override
-    public void enterFile(LevelParser.FileContext ctx) {
+    public void enterFile(LevelParser.FileContext ctx) { // Code der bei Oeffnung eines Files erzeugt wird
         counter = 0;
         output = "    private static ArrayList<GameEntity> getPlayFieldByIndex"+csvFileCount+"(){\n" +
                 "\n" +
@@ -130,7 +127,7 @@ public class CodeGen extends LevelBaseListener {
 
 
     @Override
-    public void exitFile(LevelParser.FileContext ctx) {
+    public void exitFile(LevelParser.FileContext ctx) { // Code der bei schließen eines Files erzeugt wird
         //  System.out.println("/**Wenn kein Fehler auftaucht, dann wurde das File korrekt geparsed.*/");
         output += "\t\treturn playField;\n" +
                 "\t}\n\n";
@@ -139,7 +136,7 @@ public class CodeGen extends LevelBaseListener {
     }
 
     @Override
-    public void enterTupel(LevelParser.TupelContext ctx) {
+    public void enterTupel(LevelParser.TupelContext ctx) { // Code der bei betreten eines Tupels erzeugt wird
         //System.out.print(ctx.getText());
         String[] tmp = ctx.getText().split("\\)"); // removes \n and <EOF>
         output += "\t\tplayField.add(bf.initBrick"+tmp[0]+"));\n ";
